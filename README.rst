@@ -61,7 +61,7 @@ Usage
 Documentation
 ~~~~~~~~~~~~~
 
-The
+The documentation is available at https://pyselenscrapr.readthedocs.io/.
 
 License
 -------
