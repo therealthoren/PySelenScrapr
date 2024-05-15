@@ -1,8 +1,21 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+
 
 [project]
-name = "PySelenScrapr"
+name = "pyselenscrapr"
 authors = [{name = "donnercody", email = "donnercody86@gmail.com"}]
-dynamic = ["version", "description"]
+version = "0.0.1"
+readme = "README.rst"
+requires-python = ">=3.7"
+dependencies = [
+    "requests",
+    "beautifulsoup4",
+    "pandas",
+    "selenium",
+    "webdriver_manager",
+    "numpy",
+    "tqdm",]
+description = "A web scraping library for selenium and beautifulsoup"
