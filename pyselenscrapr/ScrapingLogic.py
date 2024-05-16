@@ -127,8 +127,8 @@ class ScrapingLogic(object):
         displayed = e.is_displayed()
         return displayed
 
-    def set_data(self, key, value):
-        self._bot.set_data(key, value)
+    def set_data(self, key, value, send_to_backend=False):
+        self._bot.set_data(key, value, send_to_backend=send_to_backend)
 
     def take_screenshot(self, step):
         try:
@@ -136,8 +136,11 @@ class ScrapingLogic(object):
         except Exception as e:
             pass
 
-    def append_data(self, key, value):
-        self._bot.append_data(key, value)
+    def append_data(self, key, value, send_to_backend=False):
+        self._bot.append_data(key, value, send_to_backend=send_to_backend)
+
+    def send_data_to_backend(self, key=None, data=None):
+        return self._bot.send_data_to_backend(key, data)
 
     def has_data(self, key):
         return self._bot.has_data(key)

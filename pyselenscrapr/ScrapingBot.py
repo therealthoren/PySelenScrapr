@@ -297,15 +297,40 @@ class ScrapingBot:
     # Data handling
     ##############################################################################################################
 
-    def set_data(self, key, value):
-        self._data[key] = value
+    def get_converted_data(self, data):
+        retdata = {}
+        for key, value in data.items():
+            if isinstance(value, pd.DataFrame):
+                retdata[key] = value.to_dict(orient='records')
+            elif isinstance(value, pd.DataSeries):
+                retdata[key] = value.to_dict()
+            else:
+                retdata[key] = value
+
+        return retdata
+
+    def save_backend_data(self, data):
         try:
             if self._backend is not None:
-                self._backend.saveData(self._data, key)
+                d_converted = self.get_converted_data(data)
+                self._backend.saveData(d_converted)
         except Exception as e:
             self._on_warning(e)
 
-    def append_data(self, key, value):
+    def send_data_to_backend(self, key=None, data=None):
+        if data is None:
+            data = self._data
+        if key is not None:
+            data = data[key]
+
+        self.save_backend_data(data)
+
+    def set_data(self, key, value, send_to_backend=False):
+        self._data[key] = value
+        if send_to_backend:
+            self.save_backend_data({key: value})
+
+    def append_data(self, key, value, send_to_backend=False):
         if key in self._data:
             # pandas dataframe
             if isinstance(self._data[key], pd.DataFrame):
@@ -331,11 +356,9 @@ class ScrapingBot:
                 self._data[key] = self._data[key].append(value)
         else:
             self._data[key] = value
-        try:
-            if self._backend is not None:
-                self._backend.saveData(self._data, key)
-        except Exception as e:
-            self._on_warning(e)
+
+        if send_to_backend:
+            self.save_backend_data({key: value})
 
     def has_data(self, key):
         if key in self._data:
