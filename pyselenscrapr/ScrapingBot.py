@@ -317,6 +317,10 @@ class ScrapingBot:
         except Exception as e:
             self._on_warning(e)
 
+    def send_error_to_backend(self, error):
+        if self._backend is not None:
+            self._backend.errorHandling(error)
+
     def send_data_to_backend(self, key=None, data=None):
         if data is None:
             data = self._data
