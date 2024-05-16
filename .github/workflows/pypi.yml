@@ -1,7 +1,6 @@
 name: Create pyselenscryper pypi package
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - develop
