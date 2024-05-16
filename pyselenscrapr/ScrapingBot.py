@@ -302,8 +302,6 @@ class ScrapingBot:
         for key, value in data.items():
             if isinstance(value, pd.DataFrame):
                 retdata[key] = value.to_dict(orient='records')
-            elif isinstance(value, pd.DataSeries):
-                retdata[key] = value.to_dict()
             else:
                 retdata[key] = value
 
