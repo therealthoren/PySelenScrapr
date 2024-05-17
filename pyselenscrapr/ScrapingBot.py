@@ -2,6 +2,7 @@ import logging as log
 import time
 from typing import Callable
 
+import numpy as np
 import pandas as pd
 from typing import Union
 from pyselenscrapr.ScrapingBackend import IScrapingBackend
@@ -301,7 +302,7 @@ class ScrapingBot:
         retdata = {}
         for key, value in data.items():
             if isinstance(value, pd.DataFrame):
-                retdata[key] = value.to_dict(orient='records')
+                retdata[key] = value.replace({np.nan:None}).to_dict(orient='records')
             else:
                 retdata[key] = value
 

@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyselenscrapr"
 authors = [{name = "donnercody", email = "donnercody86@gmail.com"}]
-version = "0.0.4"
+version = "0.0.5"
 readme = "README.rst"
 requires-python = ">=3.7"
 dependencies = [
