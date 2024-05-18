@@ -1,3 +1,4 @@
+import json
 from abc import ABC
 import requests
 
@@ -28,10 +29,25 @@ class ScrapingBackendWebhook(IScrapingBackend):
         self._data_route = url + data_route
 
     def saveData(self, data: dict, key: str = None):
-        requests.post(self._data_route, json=data)
+        try:
+            d = json.dumps(data)
+            requests.post(self._data_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+        except Exception as e:
+            print(e)
+            raise e
 
     def errorHandling(self, error: Exception):
-        requests.post(self._error_route, json={"error": str(error)})
+        try:
+            d = json.dumps({"error": str(error)})
+            requests.post(self._error_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+        except Exception as e:
+            print(e)
+            raise e
 
     def notify(self, message: str):
-        requests.post(self._notify_route, json={"message": message})
+        try:
+            d = json.dumps({"message": str(message)})
+            requests.post(self._notify_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+        except Exception as e:
+            print(e)
+            raise e
