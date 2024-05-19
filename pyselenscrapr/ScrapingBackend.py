@@ -1,4 +1,5 @@
 import json
+import logging
 from abc import ABC
 import requests
 
@@ -31,7 +32,10 @@ class ScrapingBackendWebhook(IScrapingBackend):
     def saveData(self, data: dict, key: str = None):
         try:
             d = json.dumps(data)
-            requests.post(self._data_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+            ret = requests.post(self._data_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+            logging.debug("data return")
+            logging.debug(ret.status_code)
+            logging.debug(ret)
         except Exception as e:
             print(e)
             raise e
@@ -39,7 +43,10 @@ class ScrapingBackendWebhook(IScrapingBackend):
     def errorHandling(self, error: Exception):
         try:
             d = json.dumps({"error": str(error)})
-            requests.post(self._error_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+            ret = requests.post(self._error_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+            logging.debug("data return")
+            logging.debug(ret.status_code)
+            logging.debug(ret)
         except Exception as e:
             print(e)
             raise e
@@ -47,7 +54,10 @@ class ScrapingBackendWebhook(IScrapingBackend):
     def notify(self, message: str):
         try:
             d = json.dumps({"message": str(message)})
-            requests.post(self._notify_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+            ret = requests.post(self._notify_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+            logging.debug("data return")
+            logging.debug(ret.status_code)
+            logging.debug(ret)
         except Exception as e:
             print(e)
             raise e
