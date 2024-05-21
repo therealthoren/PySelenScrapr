@@ -9,8 +9,8 @@ project = 'PySelenScrapr'
 copyright = '2024, Thoren Lederer'
 author = 'donnercody'
 
-release = '0.0.8'
-version = '0.0.8'
+release = '0.0.81'
+version = '0.0.81'
 
 # -- General configuration
 

@@ -41,9 +41,6 @@ class ScrapingStepPagination(ScrapingStep):
         return True
 
     def _get_next_page(self):
-        # TODO: remove because of testing
-        return 500
-        """
         for i in range(1, len(self._executionList)):
             if self._pagination_mode == ScrapingStepPaginationMode.RandomPages:
                 r = random.randint(1, len(self._executionList)-1)
@@ -52,7 +49,6 @@ class ScrapingStepPagination(ScrapingStep):
             else:
                 if self._executionList[i] is None:
                     return i
-                """
         return None
 
     def _sleep(self, t):
