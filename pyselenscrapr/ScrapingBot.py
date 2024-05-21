@@ -49,6 +49,7 @@ class ScrapingBot:
         self._driver = driver
         self._backend = backend
         self._max_retries = max_retries
+        self._task_logs = []
         self._take_screenshots_mode = take_screenshots_mode
 
     def _on_warning(self, w):
@@ -70,7 +71,17 @@ class ScrapingBot:
         except:
             pass
 
+    def _raise_exception(self, message):
+        self._on_exception(message, None)
+        raise Exception(message)
+
     def _on_exception(self, e, step):
+        self._task_logs.append({
+            "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "message": str(e),
+            "step": step.name(),
+            "level": "error"
+        })
         if self._take_screenshots_mode == TakeScreenshotModes.OnError or \
                 self._take_screenshots_mode == TakeScreenshotModes.Always:
             self._take_screenshot(step)
@@ -79,7 +90,7 @@ class ScrapingBot:
         else:
             log.error(e)
         if self._backend is not None:
-            self._backend.errorHandling(e)
+            self._backend.errorHandling(e, debugData=self._task_logs)
 
     def set_warning_handler(self, param):
         self._warning_handler = param
@@ -159,7 +170,15 @@ class ScrapingBot:
                     self._on_exception(e, step)
                 else:
                     self._on_warning(e)
-                step.retry()
+
+                if step.can_retry():
+                    step.retry()
+                else:
+                    if step.exit_bot_when_errored():
+                        self._raise_exception("The bot will exit because of an error in the step: "+step.name())
+
+                    break
+
 
 
         if step.after_validation is not None:
@@ -171,6 +190,11 @@ class ScrapingBot:
     def _on_debug(self, msg, *args):
         msg = msg+" ".join([str(x) for x in args])
         log.debug(msg)
+        self._task_logs.append({
+            "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "message": msg,
+            "level": "debug"
+        })
 
     def all_groups_executed(self):
         for group in self._stepGroups:
@@ -252,7 +276,7 @@ class ScrapingBot:
         if group is None:
             raise Exception("Group not found - please enter a valid group name or object to start the execution from.")
         self.set_current_group(group)
-        next_step = None
+        next_step : ScrapingStep = None
         while not self.finished():
             last_step = next_step
 
@@ -273,18 +297,28 @@ class ScrapingBot:
 
                 self._run_before_step(next_step)
 
+                success = False
                 try:
                     self._on_debug("Running step: ", next_step.name())
                     self._run_step(next_step)
+                    success = True
                 except Exception as e:
                     self._on_debug("Exception: ", e)
                     if next_step.error_handling() != ScrapingStepErrorHandling.Ignore:
                         self._on_exception(e, next_step)
 
-                self._run_after_step(next_step)
+                if success:
+                    self._run_after_step(next_step)
 
-                self.sleep(3)
-                self._on_debug("Finished step: ", next_step.name())
+                    self.sleep(2)
+                    self._on_debug("Finished step: ", next_step.name())
+                else:
+                    if next_step.exit_bot_when_errored():
+                        self._on_exception("The bot will exit because of an error in the step: "+next_step.name(), next_step)
+                        return False
+                    self._on_debug("Failed step: ", next_step.name()+ " retrying "+str(self._max_retries)+" times.")
+                    self.sleep(3)
+
 
             self._run_after_group(self._current_group)
 
@@ -318,7 +352,7 @@ class ScrapingBot:
 
     def send_error_to_backend(self, error):
         if self._backend is not None:
-            self._backend.errorHandling(error)
+            self._backend.errorHandling(error, debugData=self._task_logs)
 
     def send_data_to_backend(self, key=None, data=None):
         if data is None:
@@ -372,3 +406,6 @@ class ScrapingBot:
         if key in self._data:
             return self._data[key]
         return None
+
+    def get_task_log(self):
+        return self._task_logs

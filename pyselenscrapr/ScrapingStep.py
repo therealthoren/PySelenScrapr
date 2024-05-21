@@ -50,6 +50,7 @@ class ScrapingStep(IScrapingStep):
                  error_handling: ScrapingStepErrorHandling = ScrapingStepErrorHandling.RetryAndThrowException,
                  interval: ScrapingStepInterval = ScrapingStepInterval.Order,
                  repeat: ScrapingStepRepeat = ScrapingStepRepeat.NoRepeat,
+                 exit_bot_when_errored: bool = False,
                  retry_count: int = 3):
         """
         Constructor for ScrapingStep
@@ -74,9 +75,10 @@ class ScrapingStep(IScrapingStep):
         self._interval = interval
         self._execute = execute
         self._was_executed = was_executed
-        self.before_validation = before_validation
-        self.retry = retry
-        self.retry_count = retry_count
+        self._before_validation = before_validation
+        self._retry = retry
+        self._exit_bot_when_errored = exit_bot_when_errored
+        self._retry_count = retry_count
 
     def __str__(self):
         return self._name + " " + str(self._interval) + " " + str(self._repeat)
@@ -95,6 +97,10 @@ class ScrapingStep(IScrapingStep):
         else:
             raise Exception("The robot is not set")
         return step
+
+    def raise_exception(self, message):
+        self.log("Raise exception: " + message)
+        raise Exception(message)
 
     def set_previous_step(self, step):
         self._previous_step = step
@@ -121,15 +127,22 @@ class ScrapingStep(IScrapingStep):
     def before_validation(self):
         pass
 
-    def retry(self):
-        pass
-
     def reset(self):
         self._hasExecuted = False
 
     def log(self, message):
         if self.robot is not None:
             self.robot._on_debug(message)
+
+    def retry(self):
+        if self._retry is not None:
+            self._retry()
+
+    def exit_bot_when_errored(self):
+        return self._exit_bot_when_errored
+
+    def can_retry(self):
+        return True
 
     def is_executed(self, logic):
         if self._was_executed is not None:

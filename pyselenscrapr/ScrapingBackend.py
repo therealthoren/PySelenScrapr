@@ -11,7 +11,7 @@ class IScrapingBackend(ABC):
     def saveData(self, data: dict, key: str = None):
         raise NotImplementedError
 
-    def errorHandling(self, error: Exception):
+    def errorHandling(self, error: Exception, debugData=None):
         raise NotImplementedError
 
     def notify(self, message: str):
@@ -40,15 +40,18 @@ class ScrapingBackendWebhook(IScrapingBackend):
             print(e)
             raise e
 
-    def errorHandling(self, error: Exception):
+    def errorHandling(self, error: Exception, debugData=None):
         try:
-            d = json.dumps({"error": str(error)})
-            ret = requests.post(self._error_route, data=d, headers={"Content-Type": "application/json", "Accept": "application/json"})
+            d = {"error": str(error)}
+            if debugData is not None:
+                d["debug"] = debugData
+            d_json = json.dumps(d)
+            ret = requests.post(self._error_route, data=d_json, headers={"Content-Type": "application/json", "Accept": "application/json"})
             logging.debug("data return")
             logging.debug(ret.status_code)
             logging.debug(ret)
         except Exception as e:
-            print(e)
+            logging.error(e)
             raise e
 
     def notify(self, message: str):
@@ -59,5 +62,5 @@ class ScrapingBackendWebhook(IScrapingBackend):
             logging.debug(ret.status_code)
             logging.debug(ret)
         except Exception as e:
-            print(e)
+            logging.error(e)
             raise e

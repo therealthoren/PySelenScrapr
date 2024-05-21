@@ -16,8 +16,9 @@ class ScrapingStepPagination(ScrapingStep):
                  goto_page: Callable[[IScrapingStep, int], None],
                 validate_page: Callable[[IScrapingStep, int], bool],
                  pagination_mode: ScrapingStepPaginationMode,
-                 page_count: Callable[[IScrapingStep], int]):
-        super().__init__(name, execute)
+                 page_count: Callable[[IScrapingStep], int],
+                 exit_bot_when_errored: bool = False,):
+        super().__init__(name, execute, exit_bot_when_errored=exit_bot_when_errored)
         self._executionList = []
         self._goto_page = goto_page
         self._pagination_mode = pagination_mode
@@ -40,6 +41,9 @@ class ScrapingStepPagination(ScrapingStep):
         return True
 
     def _get_next_page(self):
+        # TODO: remove because of testing
+        return 500
+        """
         for i in range(1, len(self._executionList)):
             if self._pagination_mode == ScrapingStepPaginationMode.RandomPages:
                 r = random.randint(1, len(self._executionList)-1)
@@ -48,10 +52,17 @@ class ScrapingStepPagination(ScrapingStep):
             else:
                 if self._executionList[i] is None:
                     return i
+                """
         return None
 
     def _sleep(self, t):
         time.sleep(t)
+
+    def can_retry(self):
+        return False
+
+    def retry(self):
+        self._sleep(1)
 
     def sleep_random(self):
         t = random.randint(self._min_wait_time, self._max_wait_time)
@@ -69,16 +80,22 @@ class ScrapingStepPagination(ScrapingStep):
             if next_page is None:
                 break
 
+            retry = 3
+            success = False
             l = ScrapingLogic(logic._driver, logic._bot)
-            for i in range(0, 3):
+            for i in range(0, retry):
                 try:
                     self._goto_page(l, next_page)
                     l.sleep(1)
                     if self._validate_page(l, next_page):
+                        success = True
                         break
                 except Exception as e:
-                    print(e)
+                    self.log("Error: " + str(e))
                     l.sleep(1)
+
+            if not success:
+                self.raise_exception("Could not navigate to page " + str(next_page)+" after "+str(retry)+" attempts.")
 
             try:
                 l = ScrapingLogic(logic._driver, logic._bot)
@@ -86,7 +103,7 @@ class ScrapingStepPagination(ScrapingStep):
                 l.take_screenshot(self)
                 l.sleep(1)
             except Exception as e:
-                print(e)
+                self.log("Error on try to scrape logic" + str(e))
 
             self._executionList[next_page] = True
             self.sleep_random()
